@@ -1,8 +1,5 @@
 import json
 import os
-from encodings import search_function
-
-
 class Food:
     def __init__(self, name, food_type ,price):
         self.name = name
