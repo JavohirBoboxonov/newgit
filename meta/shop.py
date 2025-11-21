@@ -1,128 +1,135 @@
-class Product:
-    def __init__(self, name, product_type, price, year):
+import json
+import os
+class Contact:
+    def __init__(self, name, phone_number, email):
         self.name = name
-        self.product_type = product_type
-        self.price = price
-        self.year = year
+        self.phone_number = phone_number
+        self.email = email
 
-    def get_info(self):
-        return f"Name: {self.name}\nProduct Type: {self.product_type}\nPrice: {self.price}\nYear: {self.year}"
-
-
-class ElectronicProduct(Product):
-    def __init__(self, name, product_type, price, year, battery):
-        super().__init__(name, product_type, price, year)
-        self.battery = battery
-        self.electricity = []
-
-    def add_electronic_product(self, new_product):
-        if new_product not in self.electricity:
-            self.electricity.append(new_product)
-
-    def remove_product(self, removed_product):
-        if removed_product in self.electricity:
-            self.electricity.remove(removed_product)
-            print(f"{removed_product} Mahsuloti o'chirildi")
-        else:
-            print("Mahsulot topilmadi")
-
-    def get_info(self):
+    def get_info_contact(self):
         return f"""
     Name:{self.name}
-    Product Type:{self.product_type}
-    Price:{self.price}
-    Year:{self.year}
-    Battery:{self.battery}
+    Phone Number:{self.phone_number}
+    Email:{self.email}
     """
-
-
-class FurnitureProduct(Product):
-    def __init__(self, name, product_type, price, year, quality):
-        super().__init__(name, product_type, price, year)
-        self.quality = quality
-        self.furnitures = []
-
-    def add_furniture_product(self, new_product):
-        if new_product not in self.furnitures:
-            self.furnitures.append(new_product)
-
-    def remove_product(self, removed_product):
-        if removed_product in self.furnitures:
-            self.furnitures.remove(removed_product)
-            print(f"{removed_product} Mahsuloti o'chirildi")
-        else:
-            print("Mahsulot topilmadi")
-
-    def get_info(self):
-        return f"""
-    Name:{self.name}
-    Product Type:{self.product_type}
-    Price:{self.price}
-    Year:{self.year}
-    Quality:{self.quality}
-    """
-
-
-class Food(Product):
-    def __init__(self, name, product_type, price, limit, year):
-        super().__init__(name, product_type, price, year)
-        self.limit = limit
-        self.foods = []
-
-    def add_food_product(self, new_product):
-        if new_product not in self.foods:
-            self.foods.append(new_product)
-
-    def remove_product(self, removed_product):
-        if removed_product in self.foods:
-            self.foods.remove(removed_product)
-            print(f"{removed_product} Mahsuloti o'chirildi")
-        else:
-            print("Mahsulot topilmadi")
-
-    def get_info(self):
-        return f"""
-    Name:{self.name}
-    Product Type:{self.product_type}
-    Price:{self.price}
-    Year:{self.year}
-    Limit:{self.limit}
-    """
-
-
-class Shop:
-    def __init__(self, name):
+    def to_dict(self):
+        return {
+            "name":self.name,
+            "phone_number":self.phone_number,
+            "email":self.email
+        }
+class Smsmanager:
+    def __init__(self, name, phone_number):
         self.name = name
-        self.products = []
+        self.phone_number = phone_number
 
-    def add_product(self, product):
-        if product not in self.products:
-            self.products.append(product)
-            print(f"{product.name} mahsuloti {self.name} do'koniga qo'shildi")
+    def take_sms(self,receiver_phone):
+        try:
+            with open("contacts.json", "r") as contacts:
+                data = json.load(contacts)
+                if receiver_phone in data:
+                    print(f"sms {receiver_phone}ga yuborildi")
+        except (FileNotFoundError, json.JSONDecoder) as r:
+            print(f"Xato {r}")
+class Phone:
+    def __init__(self, name, filename):
+        self.name = name
+        self.filename = filename
+        self.contacts = []
+
+    def load_json(self):
+        if os.path.exists(self.filename):
+            with open(os.path.join(self.filename), "r") as f:
+                data = json.load(f)
+                for item in data:
+                    main = Contact(item["name"], item["phone_number"], item["email"])
+                    self.contacts.append(main)
+
+    def save_json(self):
+        data = [key.to_dict() for key in self.contacts]
+        with open(self.filename, "w") as name:
+            json.dump(data, name, indent=4)
+
+    def add_contact(self, new_contact):
+        if new_contact not in self.contacts:
+            self.contacts.append(new_contact)
+            self.save_json()
+
+    def update_contact(self, old_name, new_name = None, new_phone_number = None, new_email = None,):
+        for item in self.contacts:
+            if item.name == old_name:
+                if new_name:
+                    item.name = new_name
+                if new_phone_number:
+                    item.phone_number = new_phone_number
+                if new_email:
+                    item.email = new_email
+                self.save_json()
+                return True
+            return False
+    def remove_contact(self, deleted_contact):
+        b = [x for x in self.contacts if x == deleted_contact]
+        if len(b) > 0:
+            self.contacts.remove(deleted_contact)
+            self.save_json()
         else:
-            print(f"{product.name} mahsuloti allaqachon mavjud!")
+            print("xato")
+    def view_contacts(self):
+        for item in self.contacts:
+            print(item.to_dict())
+s1 = Phone("Iphone", "contacts.json")
 
-    def remove_product(self, product):
-        if product in self.products:
-            self.products.remove(product)
-            print(f"{product.name} mahsuloti {self.name} do'konidan o'chirildi")
+def menu():
+    print("\nPhone Book Options:")
+    print("1. View Contacts")
+    print("2. Add Contact")
+    print("3. Update Contact")
+    print("4. Remove Contact")
+    print("5. Exit")
+
+def main():
+    while True:
+        menu()
+        choice = input("Choose an option (1-5): ").strip()
+
+        if choice == '1':
+            # View all contacts
+            s1.view_contacts()
+
+        elif choice == '2':
+            name = input("Enter name: ").strip()
+            phone_number = input("Enter phone number: ").strip()
+            email = input("Enter email: ").strip()
+            new_contact = Contact(name, phone_number, email)
+            s1.add_contact(new_contact)
+            print(f"Contact {name} added.")
+
+        elif choice == '3':
+            old_name = input("Enter the name of the contact you want to update: ").strip()
+            new_name = input("Enter new name (or press Enter to skip): ").strip() or None
+            new_phone_number = input("Enter new phone number (or press Enter to skip): ").strip() or None
+            new_email = input("Enter new email (or press Enter to skip): ").strip() or None
+            if s1.update_contact(old_name, new_name, new_phone_number, new_email):
+                print(f"Contact {old_name} updated.")
+            else:
+                print(f"Contact {old_name} not found.")
+
+        elif choice == '4':
+            name_to_remove = input("Enter the name of the contact you want to remove: ").strip()
+            contact_to_remove = None
+            for contact in s1.contacts:
+                if contact.name == name_to_remove:
+                    contact_to_remove = contact
+                    break
+            if contact_to_remove:
+                s1.remove_contact(contact_to_remove)
+                print(f"Contact {name_to_remove} removed.")
+            else:
+                print(f"Contact {name_to_remove} not found.")
+
+        elif choice == '5':
+            print("Exiting phone book...")
+            break
         else:
-            print(f"{product.name} mahsuloti do'konda topilmadi!")
-
-    def list_products(self):
-        if self.products:
-            print(f"\n{self.name} do'konidagi mahsulotlar:")
-            for product in self.products:
-                print(product.get_info())
-        else:
-            print(f"{self.name} do'konida mahsulotlar yo'q!")
-shop = Shop("Shop")
-
-
-electronic1 = ElectronicProduct("Smartphone", "Electronics", 500, 2023, 4000)
-furniture1 = FurnitureProduct("Sofa", "Furniture", 300, 2022, "High")
-food1 = Food("Pizza", "Food", 15, "2023-11-01", 2025)
-
-shop.add_product(electronic1)
-shop.add_product(furniture1)
-shop.add_product(food1)
+            print("Invalid option. Please choose between 1-5.")
+main()
