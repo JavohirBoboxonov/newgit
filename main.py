@@ -130,7 +130,6 @@ def main():
         elif choice == '5':
             print("Exiting phone book...")
             break
-
         else:
             print("Invalid option. Please choose between 1-5.")
 main()
